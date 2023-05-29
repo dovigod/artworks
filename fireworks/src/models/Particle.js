@@ -1,12 +1,12 @@
 import {Vector} from './Vector.js';
 export class Particle{
-  constructor(ctx, x,y, isRoot = true , color){
+  constructor(ctx, x,y, isRoot = true , color , size = 4){
     this.pos = new Vector(x,y);
     this.color = color;
     if(isRoot){
       this.vel = new Vector(0,-(Math.random()*4) - 8);
     }else{
-      this.vel = Vector.random(0.5 ,24 , 0 , -10);
+      this.vel = Vector.random(0.5 ,Math.random()*20 + 4 , 0 , -Math.random()*10 - 3);
       this.vel.mult({
         x: 0.3,
         y: 0.5
@@ -17,7 +17,7 @@ export class Particle{
       // }
     }
     this.acc = new Vector(0,0);
-    this.size = 4;
+    this.size = size;
     this.ctx = ctx;
   }
 

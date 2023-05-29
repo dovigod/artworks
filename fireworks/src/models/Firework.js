@@ -8,7 +8,7 @@ export class Firework{
     this.ctx = ctx
     this.field = field;
     this.color = colorPalete[Math.floor(Math.random() * colorPalete.length)]
-    this.root = new Particle(this.ctx, Math.random()* this.field.width , this.field.height , true, this.color);
+    this.root = new Particle(this.ctx, Math.random()* this.field.width , this.field.height , true, this.color , 2);
     this.isRare = Math.random() < 0.1;
     this.particles = [];
     this.explode = false;
@@ -16,8 +16,6 @@ export class Firework{
     this.lifespan = 4;
     this.store = storage;
     this.baseDeaccelerator = baseDeaccelerator;
-
-    
   }
   update(){
     if(this.finish){
