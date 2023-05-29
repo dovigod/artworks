@@ -20,7 +20,6 @@ import { Firework } from './models/Firework.js'
 
   const GRAVITY = new Vector(0, 0.2)
   const fireworks = new FireWorkHeap();
-  let cnt = 0;
   function animate(){
 
     // ctx.clearRect(0,0,dimension.width, dimension.height)
@@ -30,10 +29,9 @@ import { Firework } from './models/Firework.js'
       fireworks.add(new Firework(ctx, fireworks , dimension, GRAVITY))
       // console.log('new object added, '  +fireworks.onStageNodeCnt + ' items on stage')
     }
-    if(fireworks.removalStaged > 0 &&fireworks.peek() && fireworks.peek()?.finish && cnt < 1000){
+    if(fireworks.removalStaged > 0 && fireworks.peek() && fireworks.peek()?.finish){
       fireworks.remove();
       // console.log(fireworks.storage, fireworks.storage.length  )
-      cnt ++;
     }
     for(let i= 0 ; i < fireworks.storage.length;  i++){
         fireworks.storage[i]?.update();
