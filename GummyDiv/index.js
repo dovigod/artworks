@@ -15,6 +15,10 @@ let pointer = {
   y: null,
   dx: null,
   dy: null,
+  ox : null,
+  oy : null,
+  px : null,
+  py : null,
   active: false
 }
 
@@ -23,6 +27,8 @@ window.addEventListener('mousedown', (event) => {
   pointer.active = true
   pointer.x = event.x
   pointer.y = event.y;
+  pointer.ox = event.x;
+  pointer.oy = event.y;
 })
 window.addEventListener('mousemove', (event) => {
 
@@ -33,7 +39,10 @@ window.addEventListener('mousemove', (event) => {
   }else{
     pointer.dx = event.x - pointer.x;
     pointer.dy = event.y - pointer.y;
+    pointer.px = event.x - pointer.ox;
+    pointer.py = event.y - pointer.oy;
   }
+
   pointer.x = event.x;
   pointer.y = event.y;
 
@@ -55,8 +64,8 @@ function getOrthVecDirection(uvecX, uvecY){
   return dirZ;
 }
 
-function getDistance(vectorX, vectorY){
-  return (vectorX.x - vectorY.x) ** 2 + (vectorX.y - vectorY.y) ** 2
+function getDistance(vectorX, vectorY , precise = false){
+  return precise ? Math.sqrt((vectorX.x - vectorY.x) ** 2 + (vectorX.y - vectorY.y) ** 2) : (vectorX.x - vectorY.x) ** 2 + (vectorX.y - vectorY.y) ** 2
 }
 
 function getIntersectingAngle(uvecX , uvecY){
@@ -84,6 +93,8 @@ class Grid{
     this.cols = new Array(Math.ceil(this.vpw / this.distance)).fill(0).map((_,i) => i);
     this.rows = new Array(Math.ceil(this.vph / this.distance)).fill(0).map((_,i) => i);
     this.color = color;
+    this.controlPoints = [];
+
   }
 
   render(){
@@ -117,6 +128,16 @@ class Gum{
       x: 0,
       y: 0
     }
+    this.cpStrength = 10;
+    this.curveStart = {
+      x : 0,
+      y : 0
+    }
+    this.curveEnd = {
+      x: 0,
+      y: 0
+    }
+    const controlPoints = []
   }
   isPointerInBoundingBox(pointer){
     return this.radius ** 2 > getDistance(pointer,this.basePosition)
@@ -127,15 +148,38 @@ class Gum{
       this.direction.x = pointer.x - this.basePosition.x,
       this.direction.y = pointer.y - this.basePosition.y
       this.direction = normalize(this.direction);
+
+      const c1 = {
+        x : this.basePosition.x + (-this.direction.y * (this.radius / 2)),
+        y : this.basePosition.y + (this.direction.x * (this.radius / 2))
+      }
+      const c2 = {
+        x : pointer.x + (-this.direction.y * (this.radius / 2)),
+        y : pointer.y + (this.direction.x * (this.radius / 2))
+      }
+      const c3 = {
+        x : this.basePosition.x + (this.direction.y * (this.radius / 2)),
+        y : this.basePosition.y + (-this.direction.x * (this.radius / 2))
+      }
+      const c4 = {
+        x : pointer.x + (this.direction.y * (this.radius / 2)),
+        y : pointer.y + (-this.direction.x * (this.radius / 2))
+      }
+      this.controlPoints = [c1,c2,c3,c4]
       this.facingAngle = getIntersectingAngle(this.originVector, this.direction);
     }
   }
   render(){
-    this.ctx.beginPath()
-    this.ctx.arc(this.basePosition.x , this.basePosition.y , this.radius ,-Math.PI / 2 + this.facingAngle,  Math.PI - Math.PI / 2 + this.facingAngle) ;
-    this.ctx.closePath()
     this.ctx.fillStyle = this.color;
+    this.ctx.beginPath()
+    this.ctx.arc(this.basePosition.x , this.basePosition.y , this.radius / 2 ,-Math.PI / 2 + this.facingAngle,  Math.PI - Math.PI / 2 + this.facingAngle) ;
+    this.ctx.bezierCurveTo(this.controlPoints[0].x + (this.direction.x * this.cpStrength) , 
+    this.controlPoints[0].y + (this.direction.y * this.cpStrength) , this.controlPoints[1].x - (this.direction.x * this.cpStrength), this.controlPoints[1].y - (this.direction.y * this.cpStrength) , this.controlPoints[1].x, this.controlPoints[1].y )
     this.ctx.fill()
+
+    this.ctx.arc(pointer.x , pointer.y ,this.radius  , -Math.PI / 2 + this.facingAngle, Math.PI + Math.PI / 2 + this.facingAngle)
+    this.ctx.fill()
+    this.ctx.closePath()
   }
 }
 
@@ -148,14 +192,13 @@ const g = new Gum(
 const grid = new Grid(ctx, innerWidth, innerHeight, 50)
 grid.render()
 function render(){
-  
   if(currentFrame > interval){
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+    g.update()
     g.render()
     grid.render()
 
-    g.update()
   }
   currentFrame++;
   requestAnimationFrame(render)
