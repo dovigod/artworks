@@ -128,7 +128,7 @@ class Gum{
       x: 0,
       y: 0
     }
-    this.cpStrength = 10;
+    this.cpStrength = 100;
     this.curveStart = {
       x : 0,
       y : 0
@@ -137,7 +137,7 @@ class Gum{
       x: 0,
       y: 0
     }
-    const controlPoints = []
+    this.controlPoints = []
   }
   isPointerInBoundingBox(pointer){
     return this.radius ** 2 > getDistance(pointer,this.basePosition)
@@ -149,21 +149,22 @@ class Gum{
       this.direction.y = pointer.y - this.basePosition.y
       this.direction = normalize(this.direction);
 
+      this.cpStrength = Math.abs(getDistance(pointer,this.basePosition,true)) * 0.7
       const c1 = {
-        x : this.basePosition.x + (-this.direction.y * (this.radius / 2)),
+        x : this.basePosition.x + (-this.direction.y * (this.radius / 2)) ,
         y : this.basePosition.y + (this.direction.x * (this.radius / 2))
       }
       const c2 = {
-        x : pointer.x + (-this.direction.y * (this.radius / 2)),
-        y : pointer.y + (this.direction.x * (this.radius / 2))
+        x : pointer.x + (-this.direction.y * (this.radius)),
+        y : pointer.y + (this.direction.x * (this.radius))
       }
       const c3 = {
-        x : this.basePosition.x + (this.direction.y * (this.radius / 2)),
-        y : this.basePosition.y + (-this.direction.x * (this.radius / 2))
+        x : this.basePosition.x + (this.direction.y * (this.radius /2)),
+        y : this.basePosition.y + (-this.direction.x * (this.radius /2))
       }
       const c4 = {
-        x : pointer.x + (this.direction.y * (this.radius / 2)),
-        y : pointer.y + (-this.direction.x * (this.radius / 2))
+        x : pointer.x + (this.direction.y * (this.radius )),
+        y : pointer.y + (-this.direction.x * (this.radius ))
       }
       this.controlPoints = [c1,c2,c3,c4]
       this.facingAngle = getIntersectingAngle(this.originVector, this.direction);
@@ -173,13 +174,92 @@ class Gum{
     this.ctx.fillStyle = this.color;
     this.ctx.beginPath()
     this.ctx.arc(this.basePosition.x , this.basePosition.y , this.radius / 2 ,-Math.PI / 2 + this.facingAngle,  Math.PI - Math.PI / 2 + this.facingAngle) ;
-    this.ctx.bezierCurveTo(this.controlPoints[0].x + (this.direction.x * this.cpStrength) , 
-    this.controlPoints[0].y + (this.direction.y * this.cpStrength) , this.controlPoints[1].x - (this.direction.x * this.cpStrength), this.controlPoints[1].y - (this.direction.y * this.cpStrength) , this.controlPoints[1].x, this.controlPoints[1].y )
-    this.ctx.fill()
-
-    this.ctx.arc(pointer.x , pointer.y ,this.radius  , -Math.PI / 2 + this.facingAngle, Math.PI + Math.PI / 2 + this.facingAngle)
+    if(this.controlPoints.length === 0) return;
+    this.ctx.bezierCurveTo(
+      this.controlPoints[2].x + (this.direction.x * this.cpStrength * 1.2), 
+      this.controlPoints[2].y + (this.direction.y * this.cpStrength * 1.2),
+      this.controlPoints[3].x - (this.direction.x * this.cpStrength ),
+      this.controlPoints[3].y - (this.direction.y * this.cpStrength ), 
+      this.controlPoints[3].x,
+      this.controlPoints[3].y )
+    this.ctx.arc(pointer.x , pointer.y ,this.radius  , Math.PI / 2 - this.facingAngle, -Math.PI + Math.PI / 2 -this.facingAngle)
+    this.ctx.bezierCurveTo(
+      this.controlPoints[1].x - (this.direction.x * this.cpStrength), 
+      this.controlPoints[1].y - (this.direction.y * this.cpStrength),
+      this.controlPoints[0].x + (this.direction.x * this.cpStrength),
+      this.controlPoints[0].y + (this.direction.y * this.cpStrength), 
+      this.controlPoints[0].x,
+      this.controlPoints[0].y )
     this.ctx.fill()
     this.ctx.closePath()
+
+    this.ctx.beginPath()
+    this.ctx.arc(pointer.x , pointer.y ,this.radius  , 0, 2*Math.PI);
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle='blue'
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[0].x,this.controlPoints[0].y , 5 , 0 , Math.PI * 2)
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle='red'
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[1].x,this.controlPoints[1].y, 5 , 0 , Math.PI * 2)
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle='orange'
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[2].x,this.controlPoints[2].y, 5 , 0 , Math.PI * 2)
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle='green'
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[3].x,this.controlPoints[3].y,5 , 0 , Math.PI * 2)
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle='white'
+    this.ctx.beginPath()
+    this.ctx.arc(this.basePosition.x,this.basePosition.y,5 , 0 , Math.PI * 2)
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle='white'
+    this.ctx.beginPath()
+    this.ctx.arc(pointer.x,pointer.y,5 , 0 , Math.PI * 2)
+    this.ctx.fill();
+    this.ctx.closePath()
+
+    this.ctx.fillStyle = 'purple';
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[2].x + (this.direction.x * this.cpStrength), 
+    this.controlPoints[2].y - (this.direction.y * this.cpStrength), 5, 0, Math.PI * 2);
+    this.ctx.fill()
+    this.ctx.closePath()
+
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[3].x - (this.direction.x * this.cpStrength),
+    this.controlPoints[3].y + (this.direction.y * this.cpStrength), 5, 0, Math.PI * 2);
+    this.ctx.fill()
+    this.ctx.closePath()
+
+    this.ctx.fillStyle = 'skyblue';
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[1].x + (this.direction.x * this.cpStrength), 
+    this.controlPoints[1].y + (this.direction.y * this.cpStrength), 5, 0, Math.PI * 2);
+    this.ctx.fill()
+    this.ctx.closePath()
+
+    this.ctx.beginPath()
+    this.ctx.arc(this.controlPoints[0].x - (this.direction.x * this.cpStrength),
+    this.controlPoints[0].y - (this.direction.y * this.cpStrength), 5, 0, Math.PI * 2);
+    this.ctx.fill()
+    this.ctx.closePath()
+
   }
 }
 
